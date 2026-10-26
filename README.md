@@ -1,116 +1,251 @@
-## Proyecto del Módulo 1 — Unidad U1.2
+# Especialización en Desarrollo con IA Generativa — Módulo 1
 
-Configuración de un entorno Python y ejecución de una primera petición autenticada a Gemini mediante Thunder Client.
+Repositorio de trabajo del Módulo 1 del programa de especialización en
+Desarrollo con IA Generativa.
 
-### Requisitos previos
+Incluye la configuración del entorno de Python y un módulo para consultar
+la API de Google Gemini, procesar su respuesta y manejar errores.
 
-- Python instalado. Versión utilizada en este proyecto: 3.14.7.
+## Requisitos
+
+- Python instalado. Versión utilizada: 3.14.7.
 - Git instalado.
-- Visual Studio Code.
-- Para repetir la prueba de API: Thunder Client y una clave propia de Gemini.
+- Una clave de API de Gemini.
+- Acceso a internet para realizar las consultas.
 
-### Instalación en Windows con PowerShell
+Los comandos siguientes están preparados para Windows PowerShell.
 
-1. Clona el repositorio y entra en su carpeta:
+## Instalación
+
+### 1. Clonar el repositorio
 
 ```powershell
-git clone https://github.com/jersonmontecino-lab/especializacion-ia-modulo-1.git
-cd especializacion-ia-modulo-1
+git clone https://github.com/jersonmontecino-lab/especializacion-ia-modulo-1.git plantilla-repositorio-base
+cd plantilla-repositorio-base
 ```
 
-2. Crea el entorno virtual:
+### 2. Crear el entorno virtual
 
 ```powershell
 python -m venv venv
 ```
 
-3. Activa el entorno:
+### 3. Activar el entorno virtual
 
 ```powershell
 .\venv\Scripts\Activate.ps1
 ```
 
-Si PowerShell bloquea la activación, ejecuta este comando y vuelve a intentar activarlo. El cambio se aplica únicamente a la terminal actual:
+Si PowerShell bloquea la ejecución del script, permite su ejecución
+durante la sesión actual y vuelve a activar el entorno:
 
 ```powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
+.\venv\Scripts\Activate.ps1
 ```
 
-4. Instala las dependencias registradas:
+Al activarse, la terminal muestra `(venv)` al principio de la línea.
+
+### 4. Instalar las dependencias
 
 ```powershell
 python -m pip install -r requirements.txt
 ```
 
-5. Comprueba que las librerías pueden importarse:
+### 5. Verificar el entorno
 
 ```powershell
-python -c "import requests; from google import genai; from dotenv import load_dotenv; print('Entorno reconstruido correctamente')"
+python -c "import requests; from google import genai; from dotenv import load_dotenv; print('Entorno configurado correctamente')"
 ```
 
-Resultado esperado:
+Este comando comprueba que las dependencias pueden importarse.
+No realiza una consulta a Gemini.
 
-```text
-Entorno reconstruido correctamente
-```
+### 6. Configurar la clave de API
 
-### Configuración de la credencial
-
-Copia la plantilla:
+Copia la plantilla de configuración:
 
 ```powershell
 Copy-Item .env.example .env
 ```
 
-Abre `.env` en el editor y reemplaza `tu_llave_aqui` por tu propia clave:
+Este paso se realiza en una instalación nueva. Si ya tienes un archivo
+`.env` configurado, conserva ese archivo.
+
+Abre `.env` en un editor y reemplaza el valor de ejemplo:
 
 ```dotenv
 API_KEY=tu_llave_aqui
 ```
 
-El archivo `.env` y la carpeta `venv/` están excluidos mediante `.gitignore`. Cada persona utiliza su propia credencial.
+La clave real se guarda únicamente en `.env`. Este archivo está excluido
+del control de versiones mediante `.gitignore`.
 
-### Evidencia de la petición autenticada
+## Ejecutar una consulta
 
-La prueba se realizó con Thunder Client y el modelo `gemini-3.8-flash`.
-
-Consulta los datos y la captura en [Documentación de la prueba](docs/prueba_api.md).
-
-## Consultar Gemini desde Python
-
-Con el entorno virtual activado y la variable `API_KEY` configurada
-en el archivo `.env`, ejecuta:
+Desde la raíz del proyecto, con el entorno virtual activado:
 
 ```powershell
 python src/consumir_api.py
 ```
 
-Escribe una pregunta y presiona Enter. El programa realiza una consulta
-a Gemini y muestra la respuesta en la terminal.
+Cuando aparezca `Escribe tu pregunta:`, escribe una pregunta y presiona Enter.
 
-Ejemplo de pregunta:
+Ejemplo:
 
-> Explica con un ejemplo la diferencia entre una lista y un diccionario en Python.
+```text
+Escribe tu pregunta: Explica qué es una API en una sola frase.
 
-### Organización del código
+Respuesta:
+[Texto generado por Gemini]
+```
 
-- `obtener_clave()`: obtiene y valida la clave de API.
-- `armar_peticion()`: prepara la URL, los encabezados y el cuerpo.
-- `enviar_peticion()`: envía la petición HTTP y devuelve el JSON decodificado.
-- `extraer_texto()`: reúne el texto de la respuesta.
-- `consultar_modelo()`: valida la pregunta y coordina la consulta.
+El texto generado puede variar en cada ejecución.
 
-### Validaciones y errores
+El programa realiza una consulta por ejecución. Para hacer otra pregunta,
+ejecuta nuevamente el mismo comando.
 
-El programa rechaza preguntas vacías o valores que no sean texto.
-También muestra mensajes ante errores de conexión, tiempo de espera,
-estado HTTP, JSON inválido o respuestas sin el texto esperado.
+## Organización del código
 
-### Información adicional
+El archivo principal es `src/consumir_api.py`.
 
-Las respuestas pueden tardar varios minutos. La petición utiliza
-`timeout=(10, 360)`: 10 segundos para conectar y 360 segundos de espera
-de lectura.
+| Función | Responsabilidad |
+|---|---|
+| `obtener_clave()` | Obtiene y valida la clave de API desde las variables de entorno. |
+| `armar_peticion(pregunta)` | Valida la pregunta y prepara la URL, los encabezados y el cuerpo de la petición. |
+| `enviar_peticion(url, encabezados, cuerpo)` | Envía la petición HTTP, comprueba su estado y convierte la respuesta JSON; maneja errores de comunicación y formato. |
+| `extraer_texto(datos)` | Reúne el texto generado y maneja campos faltantes, estructuras inesperadas o respuestas sin texto. |
+| `consultar_modelo(pregunta)` | Coordina la construcción de la petición, su envío y la extracción del resultado. |
 
-Esta implementación no incorpora búsqueda web ni una fuente de datos
-en tiempo real.
+Las funciones devuelven sus resultados mediante `return`.
+La entrada por teclado y la impresión del resultado se realizan en el
+bloque `if __name__ == "__main__":`.
+
+Esto permite importar las funciones desde otro archivo sin ejecutar
+automáticamente una consulta.
+
+## Validaciones y manejo de errores
+
+El programa contempla los siguientes casos:
+
+- Preguntas que no sean texto.
+- Preguntas vacías o formadas únicamente por espacios.
+- Clave de API ausente o sin configurar.
+- Tiempo de espera agotado.
+- Errores de conexión.
+- Estados HTTP de error.
+- Respuestas que no contienen JSON válido.
+- Campos o candidatos faltantes en la respuesta.
+- Estructuras inesperadas o respuestas sin texto generado.
+
+La validación de entrada se realiza antes de preparar la petición.
+
+Los errores se manejan dentro de la función responsable de cada operación.
+El bloque principal captura `ValueError` y `RuntimeError` para mostrar un
+mensaje comprensible al usuario.
+
+## Verificaciones realizadas
+
+Durante el desarrollo se comprobó:
+
+- Reconstrucción del entorno desde una copia nueva del repositorio.
+- Importación de las dependencias.
+- Exclusión de `.env` y `venv/` mediante `.gitignore`.
+- Petición autenticada desde Thunder Client.
+- Consulta real a Gemini desde Python.
+- Construcción de la petición y extracción de texto con datos de prueba.
+- Rechazo de preguntas vacías y valores que no sean texto.
+- Extracción de una respuesta dividida en varias partes.
+- Detección de una respuesta sin texto.
+- Manejo de errores simulados de conexión, JSON inválido y campos faltantes.
+- Rechazo de una credencial inválida mediante una petición real.
+- Consulta exitosa con la credencial correcta después de las pruebas.
+
+## Estructura del repositorio
+
+- `src/`: código fuente del proyecto.
+- `docs/`: documentación y evidencias.
+- `tests/`: carpeta reservada para pruebas del proyecto.
+- `requirements.txt`: dependencias y versiones del entorno.
+- `.env.example`: plantilla de configuración sin credenciales reales.
+- `.gitignore`: archivos y carpetas excluidos del control de versiones.
+- `README.md`: instrucciones de instalación, uso y verificación.
+
+El archivo `.env` y el entorno virtual `venv/` se crean localmente y
+no forman parte del repositorio.
+
+## Evidencias
+
+### Unidad 1.2
+
+- [Documentación de la petición autenticada](docs/prueba_api.md).
+- [Captura de la petición autenticada](docs/evidencia_peticion_autenticada.png).
+
+### Unidad 1.3
+
+- [Consulta desde Python](docs/evidencia_consulta_python.png).
+- [Credencial inválida, entrada vacía y consulta exitosa](docs/evidencia_validaciones_python.png).
+- [Commit y sincronización final](docs/evidencia_commit_final_u13.png).
+
+## Protección de credenciales
+
+- La clave se carga desde `.env` mediante `python-dotenv`.
+- La autenticación se envía mediante el encabezado `x-goog-api-key`.
+- No se escribe la clave directamente en el código.
+- No se incluye la clave en capturas ni en documentación.
+- `.env.example` conserva únicamente un valor de ejemplo.
+
+Para comprobar que Git ignora el archivo local:
+
+```powershell
+git check-ignore -v .env
+```
+
+Para comprobar que no está registrado en el repositorio:
+
+```powershell
+git ls-files -- .env
+```
+
+El segundo comando no debe mostrar ningún archivo.
+
+## Información adicional
+
+### Configuración utilizada
+
+El módulo utiliza el modelo `gemini-3.8-flash` con
+`thinkingLevel` configurado en `low`.
+
+La petición utiliza:
+
+```python
+timeout=(10, 360)
+```
+
+Esto establece 10 segundos para conectar y 360 segundos de espera de
+lectura. No representa un límite total exacto de duración de la operación.
+
+Durante las pruebas se observaron respuestas que tardaron varios minutos.
+Ampliar la espera permite tolerar esa demora, pero no acelera el servicio.
+
+### Datos en tiempo real
+
+Esta implementación no incorpora búsqueda web ni una fuente externa de
+datos en tiempo real. Por ello, no garantiza respuestas actuales sobre
+clima, noticias u otros datos que cambien constantemente.
+
+### Actualizar las dependencias
+
+Si instalas nuevas dependencias, registra el entorno en UTF-8 con:
+
+```powershell
+python -c "import subprocess, sys; from pathlib import Path; paquetes=subprocess.check_output([sys.executable, '-m', 'pip', 'freeze'], text=True); Path('requirements.txt').write_text(paquetes, encoding='utf-8')"
+```
+
+### Desactivar el entorno virtual
+
+Al terminar de trabajar:
+
+```powershell
+deactivate
+```
