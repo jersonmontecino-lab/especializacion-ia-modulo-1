@@ -19,6 +19,14 @@ def obtener_clave():
 
 
 def armar_peticion(pregunta):
+    if not isinstance(pregunta, str):
+        raise ValueError("La pregunta debe ser un texto.")
+
+    pregunta = pregunta.strip()
+
+    if not pregunta:
+        raise ValueError("La pregunta no puede estar vacía.")
+
     url = (
         "https://generativelanguage.googleapis.com/v1beta/"
         "models/gemini-3.8-flash:generateContent"
@@ -48,44 +56,100 @@ def armar_peticion(pregunta):
 
 
 def enviar_peticion(url, encabezados, cuerpo):
-    respuesta = requests.post(
-        url,
-        headers=encabezados,
-        json=cuerpo,
-        timeout=(10, 360),
-    )
+    try:
+        respuesta = requests.post(
+            url,
+            headers=encabezados,
+            json=cuerpo,
+            timeout=(10, 360),
+        )
 
-    respuesta.raise_for_status()
+        respuesta.raise_for_status()
 
-    return respuesta.json()
+    except requests.exceptions.Timeout as error:
+        raise RuntimeError(
+            "Se agotó el tiempo de espera sin recibir respuesta del servicio."
+        ) from error
+
+    except requests.exceptions.ConnectionError as error:
+        raise RuntimeError(
+            "No se pudo establecer o mantener la conexión con el servicio."
+        ) from error
+
+    except requests.exceptions.HTTPError as error:
+        estado = error.response.status_code
+
+        if estado in (401, 403):
+            mensaje = (
+                f"Error HTTP {estado}: la credencial fue rechazada "
+                "o no tiene permisos para esta operación."
+            )
+        elif estado == 400:
+            mensaje = (
+                "Error HTTP 400: la API rechazó la petición. "
+                "Revisa los parámetros y la credencial configurada."
+            )
+        elif estado == 429:
+            mensaje = (
+                "Error HTTP 429: se alcanzó un límite de solicitudes "
+                "o de cuota del servicio."
+            )
+        else:
+            mensaje = f"La API devolvió un error HTTP {estado}."
+
+        raise RuntimeError(mensaje) from error
+
+    except requests.exceptions.RequestException as error:
+        raise RuntimeError(
+            "Ocurrió un error al enviar la petición HTTP."
+        ) from error
+
+    try:
+        return respuesta.json()
+
+    except requests.exceptions.JSONDecodeError as error:
+        raise RuntimeError(
+            "La respuesta del servicio no tiene un formato JSON válido."
+        ) from error
 
 
 def extraer_texto(datos):
-    partes = datos["candidates"][0]["content"]["parts"]
+    try:
+        partes = datos["candidates"][0]["content"]["parts"]
 
-    textos = [
-        parte["text"]
-        for parte in partes
-        if isinstance(parte.get("text"), str)
-    ]
+        textos = [
+            parte["text"]
+            for parte in partes
+            if isinstance(parte.get("text"), str)
+            and not parte.get("thought", False)
+        ]
 
-    texto = "".join(textos).strip()
+        texto = "".join(textos).strip()
+
+    except KeyError as error:
+        raise RuntimeError(
+            f"Falta el campo {error} en la respuesta del servicio."
+        ) from error
+
+    except IndexError as error:
+        raise RuntimeError(
+            "La respuesta del servicio no contiene candidatos para leer."
+        ) from error
+
+    except (TypeError, AttributeError) as error:
+        raise RuntimeError(
+            "La estructura de la respuesta del servicio no es la esperada."
+        ) from error
 
     if not texto:
-        raise ValueError("La respuesta de la API no contiene texto.")
+        raise RuntimeError(
+            "La respuesta del servicio no contiene texto generado."
+        )
 
     return texto
 
 
 def consultar_modelo(pregunta):
-    if not isinstance(pregunta, str):
-        raise ValueError("La pregunta debe ser un texto.")
-
-    pregunta = pregunta.strip()
-
-    if not pregunta:
-        raise ValueError("La pregunta no puede estar vacía.")
-
     url, encabezados, cuerpo = armar_peticion(pregunta)
     datos = enviar_peticion(url, encabezados, cuerpo)
 
@@ -95,37 +159,11 @@ def consultar_modelo(pregunta):
 if __name__ == "__main__":
     pregunta = input("Escribe tu pregunta: ")
 
-    print("Consultando a Gemini...", flush=True)
-
     try:
         resultado = consultar_modelo(pregunta)
 
         print("\nRespuesta:")
         print(resultado)
 
-    except requests.exceptions.Timeout:
-        print(
-            "Se agotó el tiempo de espera sin recibir respuesta. "
-            "Intenta nuevamente más tarde."
-        )
-
-    except requests.exceptions.ConnectionError:
-        print("No se pudo establecer o mantener la conexión con Gemini.")
-
-    except requests.exceptions.HTTPError as error:
-        print(
-            "La API devolvió un error HTTP: "
-            f"{error.response.status_code}."
-        )
-
-    except requests.exceptions.JSONDecodeError:
-        print("La API devolvió una respuesta que no es JSON válido.")
-
-    except requests.exceptions.RequestException:
-        print("Ocurrió un error al enviar la petición HTTP.")
-
-    except (KeyError, IndexError, TypeError):
-        print("La respuesta no contiene el texto en la estructura esperada.")
-
-    except ValueError as error:
+    except (ValueError, RuntimeError) as error:
         print(f"No se pudo realizar la consulta: {error}")
