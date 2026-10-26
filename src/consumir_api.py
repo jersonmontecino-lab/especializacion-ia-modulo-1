@@ -65,6 +65,14 @@ def extraer_texto(datos):
 
 
 def consultar_modelo(pregunta):
+    if not isinstance(pregunta, str):
+        raise ValueError("La pregunta debe ser un texto.")
+
+    pregunta = pregunta.strip()
+
+    if not pregunta:
+        raise ValueError("La pregunta no puede estar vacía.")
+
     url, encabezados, cuerpo = armar_peticion(pregunta)
     datos = enviar_peticion(url, encabezados, cuerpo)
 
@@ -107,4 +115,4 @@ if __name__ == "__main__":
         print("La respuesta no contiene el texto en la estructura esperada.")
 
     except ValueError as error:
-        print(f"Error de configuración: {error}")
+        print(f"No se pudo realizar la consulta: {error}")
