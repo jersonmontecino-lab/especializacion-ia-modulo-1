@@ -61,7 +61,20 @@ def enviar_peticion(url, encabezados, cuerpo):
 
 
 def extraer_texto(datos):
-    return datos["candidates"][0]["content"]["parts"][0]["text"]
+    partes = datos["candidates"][0]["content"]["parts"]
+
+    textos = [
+        parte["text"]
+        for parte in partes
+        if isinstance(parte.get("text"), str)
+    ]
+
+    texto = "".join(textos).strip()
+
+    if not texto:
+        raise ValueError("La respuesta de la API no contiene texto.")
+
+    return texto
 
 
 def consultar_modelo(pregunta):
