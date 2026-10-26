@@ -1,27 +1,77 @@
-# Plantilla de repositorio base — Especialización en Desarrollo con IA Generativa (Accenture)
+## Proyecto del Módulo 1 — Unidad U1.2
 
-Esta es la estructura base que vas a usar como punto de partida para tu proyecto en este programa. Es la misma estructura que vas a ir ampliando bloque a bloque, hasta llegar a la aplicación completa que entregas en el Gate 3.
+Configuración de un entorno Python y ejecución de una primera petición autenticada a Gemini mediante Thunder Client.
 
-## Cómo empezar
+### Requisitos previos
 
-Estos pasos se completan de forma progresiva a lo largo de la Unidad U1.2, no todos el mismo día:
+- Python instalado. Versión utilizada en este proyecto: 3.14.7.
+- Git instalado.
+- Visual Studio Code.
+- Para repetir la prueba de API: Thunder Client y una clave propia de Gemini.
 
-1. Descarga este archivo comprimido (adjunto en la plataforma) y descomprímelo en tu computador. Inicializa el control de versiones sobre esa carpeta y registra tu primer commit con esta estructura base, tal como llegó, antes de modificar nada.
-2. Crea tu entorno virtual de Python (por ejemplo, con `venv`) y actívalo.
-3. Instala las dependencias que necesites y regístralas en `requirements.txt` (al inicio puede estar vacío o con muy pocas).
-4. Copia `.env.example` a un archivo nuevo llamado `.env`, y completa ahí tus credenciales reales (llaves de API, tokens). El archivo `.env` nunca se sube al repositorio: ya está excluido en `.gitignore`.
+### Instalación en Windows con PowerShell
 
-## Estructura de carpetas
+1. Clona el repositorio y entra en su carpeta:
 
-- `src/` : todo el código fuente de tu proyecto va aquí.
-- `docs/` : documentación técnica del proyecto (diagramas, decisiones de arquitectura, notas).
-- `tests/` : pruebas de tu código (las vas a usar más adelante en el programa, cuando el proyecto lo requiera).
-- `requirements.txt` : dependencias de Python de tu proyecto, para que cualquier otra persona pueda reconstruir tu entorno con un solo comando.
-- `.env.example` : plantilla de las variables de entorno que tu proyecto necesita, sin valores reales. Tu archivo `.env` real (con tus credenciales) nunca se commitea.
-- `.gitignore` : le dice a Git qué archivos y carpetas ignorar (entre ellos, tu entorno virtual y tu archivo `.env`).
+```powershell
+git clone https://github.com/jersonmontecino-lab/especializacion-ia-modulo-1.git
+cd especializacion-ia-modulo-1
+```
 
-## Reglas que se mantienen durante todo el programa
+2. Crea el entorno virtual:
 
-- Ningún secreto (contraseña, llave de API, token) va escrito directamente en el código ni en ningún archivo que se suba al repositorio.
-- Cada proyecto nuevo tiene su propio entorno virtual: no se comparten dependencias entre proyectos distintos.
-- Todo el trabajo que se entrega en este programa vive en un repositorio de GitHub, sin excepción.
+```powershell
+python -m venv venv
+```
+
+3. Activa el entorno:
+
+```powershell
+.\venv\Scripts\Activate.ps1
+```
+
+Si PowerShell bloquea la activación, ejecuta este comando y vuelve a intentar activarlo. El cambio se aplica únicamente a la terminal actual:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
+```
+
+4. Instala las dependencias registradas:
+
+```powershell
+python -m pip install -r requirements.txt
+```
+
+5. Comprueba que las librerías pueden importarse:
+
+```powershell
+python -c "import requests; from google import genai; from dotenv import load_dotenv; print('Entorno reconstruido correctamente')"
+```
+
+Resultado esperado:
+
+```text
+Entorno reconstruido correctamente
+```
+
+### Configuración de la credencial
+
+Copia la plantilla:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Abre `.env` en el editor y reemplaza `tu_llave_aqui` por tu propia clave:
+
+```dotenv
+API_KEY=tu_llave_aqui
+```
+
+El archivo `.env` y la carpeta `venv/` están excluidos mediante `.gitignore`. Cada persona utiliza su propia credencial.
+
+### Evidencia de la petición autenticada
+
+La prueba se realizó con Thunder Client y el modelo `gemini-3.8-flash`.
+
+Consulta los datos y la captura en [Documentación de la prueba](docs/prueba_api.md).
