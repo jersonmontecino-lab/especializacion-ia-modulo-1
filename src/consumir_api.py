@@ -18,7 +18,7 @@ def obtener_clave():
     return clave
 
 
-def consultar_modelo(pregunta):
+def armar_peticion(pregunta):
     url = (
         "https://generativelanguage.googleapis.com/v1beta/"
         "models/gemini-3.8-flash:generateContent"
@@ -41,23 +41,70 @@ def consultar_modelo(pregunta):
             "thinkingConfig": {
                 "thinkingLevel": "low"
             }
-        }
-    }   
+        },
+    }
 
+    return url, encabezados, cuerpo
+
+
+def enviar_peticion(url, encabezados, cuerpo):
     respuesta = requests.post(
         url,
         headers=encabezados,
         json=cuerpo,
-        timeout=(10, 240),
+        timeout=(10, 360),
     )
 
     respuesta.raise_for_status()
-    datos = respuesta.json()
 
+    return respuesta.json()
+
+
+def extraer_texto(datos):
     return datos["candidates"][0]["content"]["parts"][0]["text"]
+
+
+def consultar_modelo(pregunta):
+    url, encabezados, cuerpo = armar_peticion(pregunta)
+    datos = enviar_peticion(url, encabezados, cuerpo)
+
+    return extraer_texto(datos)
 
 
 if __name__ == "__main__":
     pregunta = "Explica qué es una API en una sola frase."
-    resultado = consultar_modelo(pregunta)
-    print(resultado)
+
+    print("Consultando a Gemini...", flush=True)
+
+    try:
+        resultado = consultar_modelo(pregunta)
+
+        print("\nRespuesta:")
+        print(resultado)
+
+    except requests.exceptions.Timeout:
+        print(
+            "Se agotó el tiempo de espera sin recibir respuesta. "
+            "Intenta nuevamente más tarde."
+        )
+
+    except requests.exceptions.ConnectionError:
+        print("No se pudo establecer o mantener la conexión con Gemini.")
+
+    except requests.exceptions.HTTPError as error:
+        print(
+            "La API devolvió un error HTTP: "
+            f"{error.response.status_code}."
+        )
+
+    except requests.exceptions.JSONDecodeError:
+        print("La API devolvió una respuesta que no es JSON válido.")
+
+    except requests.exceptions.RequestException:
+        print("Ocurrió un error al enviar la petición HTTP.")
+
+    except (KeyError, IndexError, TypeError):
+        print("La respuesta no contiene el texto en la estructura esperada.")
+
+    except ValueError as error:
+        print(f"Error de configuración: {error}")
