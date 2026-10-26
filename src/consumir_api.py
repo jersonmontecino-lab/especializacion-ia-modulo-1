@@ -93,7 +93,7 @@ def consultar_modelo(pregunta):
 
 
 if __name__ == "__main__":
-    pregunta = "Explica qué es una API en una sola frase."
+    pregunta = input("Escribe tu pregunta: ")
 
     print("Consultando a Gemini...", flush=True)
 
