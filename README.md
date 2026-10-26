@@ -75,3 +75,42 @@ El archivo `.env` y la carpeta `venv/` están excluidos mediante `.gitignore`. C
 La prueba se realizó con Thunder Client y el modelo `gemini-3.8-flash`.
 
 Consulta los datos y la captura en [Documentación de la prueba](docs/prueba_api.md).
+
+## Consultar Gemini desde Python
+
+Con el entorno virtual activado y la variable `API_KEY` configurada
+en el archivo `.env`, ejecuta:
+
+```powershell
+python src/consumir_api.py
+```
+
+Escribe una pregunta y presiona Enter. El programa realiza una consulta
+a Gemini y muestra la respuesta en la terminal.
+
+Ejemplo de pregunta:
+
+> Explica con un ejemplo la diferencia entre una lista y un diccionario en Python.
+
+### Organización del código
+
+- `obtener_clave()`: obtiene y valida la clave de API.
+- `armar_peticion()`: prepara la URL, los encabezados y el cuerpo.
+- `enviar_peticion()`: envía la petición HTTP y devuelve el JSON decodificado.
+- `extraer_texto()`: reúne el texto de la respuesta.
+- `consultar_modelo()`: valida la pregunta y coordina la consulta.
+
+### Validaciones y errores
+
+El programa rechaza preguntas vacías o valores que no sean texto.
+También muestra mensajes ante errores de conexión, tiempo de espera,
+estado HTTP, JSON inválido o respuestas sin el texto esperado.
+
+### Información adicional
+
+Las respuestas pueden tardar varios minutos. La petición utiliza
+`timeout=(10, 360)`: 10 segundos para conectar y 360 segundos de espera
+de lectura.
+
+Esta implementación no incorpora búsqueda web ni una fuente de datos
+en tiempo real.
